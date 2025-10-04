@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Veli Portalı - {{ ogrenci.ogrenci_ad }}</title>
+    <style> /* Basit CSS stil bloğu */
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; margin: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #dee2e6; }
+        .info-card { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Hoş Geldiniz, {{ veli_ad }}</h1>
+        <a href="{{ url_for('logout') }}" style="color: #dc3545; text-decoration: none;">Çıkış Yap</a>
+    </div>
+
+    <h2>Öğrenci Bilgileri</h2>
+    <div class="info-card">
+        <p><strong>Ad Soyad:</strong> {{ ogrenci.ogrenci_ad }}</p>
+        <p><strong>Sınıf:</strong> {{ ogrenci.sinif }}</p>
+        <p><strong>Devamsızlık:</strong> {{ ogrenci.devamsizlik }} Gün</p>
+    </div>
+
+    <h2>Ders Notları</h2>
+    <div class="info-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ders Adı</th>
+                    <th>Puan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for not_bilgisi in notlar %}
+                <tr>
+                    <td>{{ not_bilgisi.ders_ad }}</td>
+                    <td>{{ not_bilgisi.puan }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

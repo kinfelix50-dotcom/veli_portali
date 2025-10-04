@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Test Sayfası{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1>Sayfa Bağlantıları Testi</h1>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Genel Sayfalar</h5>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li><a href="{{ url_for('index') }}">Ana Sayfa</a></li>
+                        <li><a href="{{ url_for('hakkimizda') }}">Hakkımızda</a></li>
+                        <li><a href="{{ url_for('iletisim') }}">İletişim</a></li>
+                        <li><a href="{{ url_for('auth_login') }}">Giriş</a></li>
+                        <li><a href="{{ url_for('auth_register') }}">Kayıt</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Admin Sayfaları</h5>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li><a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a></li>
+                        <li><a href="{{ url_for('admin_ogrenciler') }}">Öğrenciler</a></li>
+                        <li><a href="{{ url_for('admin_veliler') }}">Veliler</a></li>
+                        <li><a href="{{ url_for('admin_etkinlikler') }}">Etkinlikler</a></li>
+                        <li><a href="{{ url_for('admin_raporlar') }}">Raporlar</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Veli Sayfaları</h5>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li><a href="{{ url_for('veli_dashboard') }}">Veli Dashboard</a></li>
+                        <li><a href="{{ url_for('veli_cocuklarim') }}">Çocuklarım</a></li>
+                        <li><a href="{{ url_for('veli_etkinlikler') }}">Etkinlikler</a></li>
+                        <li><a href="{{ url_for('veli_odemeler') }}">Ödemeler</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

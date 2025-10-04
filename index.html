@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa - Akıl Zeka Oyunları Kulübü{% endblock %}
+
+{% block content %}
+<div class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold">Akıl Zeka Oyunları Kulübü</h1>
+                <p class="lead">Çocuklarınızın zihinsel gelişimini destekleyen, eğlenceli ve eğitici oyun etkinlikleri</p>
+                {% if not current_user.is_authenticated %}
+                <div class="mt-4">
+                    <a href="{{ url_for('auth_register') }}" class="btn btn-light btn-lg me-3">
+                        <i class="fas fa-user-plus me-2"></i>Hemen Kaydol
+                    </a>
+                    <a href="{{ url_for('auth_login') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-chess-queen display-1"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row text-center">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                    <h3>Zeka Gelişimi</h3>
+                    <p>Stratejik düşünme ve problem çözme becerilerini geliştirir</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-success mb-3"></i>
+                    <h3>Sosyal Etkileşim</h3>
+                    <p>Takım çalışması ve sosyal becerileri destekler</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
+                    <h3>Turnuvalar</h3>
+                    <p>Düzenli turnuvalar ile motivasyonu artırır</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
