@@ -1,0 +1,193 @@
+import os
+import socket
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+
+# Uygulama ve veritabanı kurulumu
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'akil-zeka-kulubu-secret-key-2024'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///club_database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# DB ve LoginManager'ı global tanımla
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'auth_login'
+login_manager.login_message = 'Bu sayfaya erişmek için giriş yapmalısınız.'
+
+# Modeller
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    role = db.Column(db.String(20), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    veli_profile = db.relationship('Veli', backref='user', uselist=False, lazy=True)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+class Veli(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    ad = db.Column(db.String(50), nullable=False)
+    soyad = db.Column(db.String(50), nullable=False)
+    telefon = db.Column(db.String(15))
+    adres = db.Column(db.Text)
+    
+    ogrenciler = db.relationship('Ogrenci', backref='veli', lazy=True)
+
+class Ogrenci(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    veli_id = db.Column(db.Integer, db.ForeignKey('veli.id'), nullable=False)
+    ad = db.Column(db.String(50), nullable=False)
+    soyad = db.Column(db.String(50), nullable=False)
+    sinif = db.Column(db.String(10))
+    okul = db.Column(db.String(100))
+    dogum_tarihi = db.Column(db.Date)
+    kayit_tarihi = db.Column(db.DateTime, default=datetime.utcnow)
+    durum = db.Column(db.String(20), default='aktif')
+
+class Etkinlik(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    baslik = db.Column(db.String(200), nullable=False)
+    aciklama = db.Column(db.Text)
+    baslangic_tarihi = db.Column(db.DateTime, nullable=False)
+    bitis_tarihi = db.Column(db.DateTime, nullable=False)
+    konum = db.Column(db.String(200))
+    kapasite = db.Column(db.Integer)
+    ucret = db.Column(db.Float, default=0.0)
+    durum = db.Column(db.String(20), default='planlanıyor')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Odeme(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ogrenci_id = db.Column(db.Integer, db.ForeignKey('ogrenci.id'), nullable=False)
+    miktar = db.Column(db.Float, nullable=False)
+    odeme_tarihi = db.Column(db.Date)
+    aciklama = db.Column(db.String(200))
+    durum = db.Column(db.String(20), default='bekliyor')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Basit Route'lar
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/hakkimizda')
+def hakkimizda():
+    return render_template('hakkimizda.html')
+
+@app.route('/iletisim')
+def iletisim():
+    return render_template('iletisim.html')
+
+@app.route('/giris', methods=['GET', 'POST'])
+def auth_login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            flash('Giriş başarılı!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('E-posta veya şifre hatalı!', 'error')
+    
+    return render_template('auth/login.html')
+
+@app.route('/kayit', methods=['GET', 'POST'])
+def auth_register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        ad = request.form.get('ad')
+        soyad = request.form.get('soyad')
+        telefon = request.form.get('telefon')
+        
+        if User.query.filter_by(email=email).first():
+            flash('Bu e-posta zaten kullanılıyor!', 'error')
+            return render_template('auth/register.html')
+        
+        new_user = User(email=email, role='veli')
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        new_veli = Veli(user_id=new_user.id, ad=ad, soyad=soyad, telefon=telefon)
+        db.session.add(new_veli)
+        db.session.commit()
+        
+        flash('Kayıt başarılı! Giriş yapabilirsiniz.', 'success')
+        return redirect(url_for('auth_login'))
+    
+    return render_template('auth/register.html')
+
+@app.route('/cikis')
+def auth_logout():
+    logout_user()
+    flash('Çıkış yapıldı.', 'info')
+    return redirect(url_for('index'))
+
+@app.route('/test')
+def test_pages():
+    return render_template('test.html')
+
+# Hata sayfaları
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('errors/500.html'), 500
+
+# Uygulamayı başlat
+if __name__ == '__main__':
+    with app.app_context():
+        # Veritabanını oluştur
+        db.create_all()
+        
+        # Varsayılan admin kullanıcısı
+        if not User.query.filter_by(email='admin@akilzeka.com').first():
+            admin_user = User(email='admin@akilzeka.com', role='admin')
+            admin_user.set_password('admin123')
+            db.session.add(admin_user)
+            db.session.commit()
+            print('✓ Admin kullanıcısı oluşturuldu: admin@akilzeka.com / admin123')
+    
+    # IP adresini bul
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except:
+        local_ip = '127.0.0.1'
+    
+    print(f'\n📍 IP ADRESİNİZ: {local_ip}')
+    print(f'🌐 TARAYICIDA AÇIN: http://{local_ip}:5000')
+    print('🚀 Uygulama çalışıyor...\n')
+    
+    app.run(host='0.0.0.0', port=5000, debug=False)
